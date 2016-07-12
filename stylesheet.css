@@ -1,0 +1,270 @@
+html{width: 100%; height: 100%; overflow-y: hidden;}
+body{
+	margin:0!important;
+	padding:0!important;
+	background: #eee;
+	width:100%!important;
+	height: 100%!important;
+}
+*{box-sizing: border-box!important;}
+nav{z-index: 10}
+canvas{background: #fff!important;}
+.radius-none{border-radius: 0!important;}
+	.container{
+		position: relative;
+		width:100%;
+		height:100%;
+	}
+	.container:after{
+		content:"";
+		display: block;
+		clear:both;
+	}
+		#projectNav{
+			position: absolute;
+			width:200px;
+			height:100%;
+			background: #eee;
+			padding:0;
+			border-right: 1px solid #ddd;
+			background: #eee
+		}
+		.btn-help{
+			border-radius: 50%;
+			width:50px;
+			height:50px;
+			line-height: 50px;
+			padding: 0;
+			background-color: orange;
+			color: #fff;
+			text-align: center;
+			cursor: pointer;
+			font-size: 1.5em
+		}
+			#run{
+				font-weight: bold;
+				font-size: 1.2em;
+				font-family: "맑은 고딕";
+				border-radius: 0; 
+				margin-bottom: 0px;
+				width:100%;
+			}
+			#run.stop{
+				background:;
+			}
+			.importantBtnWrap{
+				position: relative; padding:0; color:#fff;
+			}
+				.importantBtnWrap .btn-title{
+					font-size:15px; text-align: center; padding:10px;
+					border-bottom: 1px dotted #aaa; color:#5d5d5d;
+					text-align: left!important;
+				}
+				.importantBtnWrap .shadow{
+					background-image: none;
+					outline: 0;
+				    -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+				    box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);		
+				}
+				.importantBtnWrap hr{margin:0 0 0px 0;}
+				.importantBtnWrap .btn{
+					text-align: left!important;
+					color:#5d5d5d; padding-left: 20px;
+				}
+				.importantBtnWrap .btn.on{
+					background-color:#e2e2e2
+				}
+				.importantBtnWrap .btn:hover{color:#5d5d5d;}
+
+			#projectNav .importantBtnWrap .btn{margin: 0; border-radius: 0;}
+
+			#projectNav .importantBtnWrap .switchWrap{
+				position: absolute; top:44px; right:2px;
+			}
+			#projectNav .importantBtnWrap .switchWrap .alertBox{
+				position:absolute; top:-4px;
+				padding:6px 15px;
+				font-size:12px;
+				left:53px; 
+				width:200px; 
+				border:1px solid #ddd; 
+				background:#fff; 
+				color:#5d5d5d; 
+				z-index:1;
+				transition: opacity 0.2s;
+				-webkit-transition:opacity 0.2s;
+				-moz-transition:opacity 0.2s;
+				opacity: 0;
+			}
+			#projectNav .importantBtnWrap .switchWrap .alertBox:before{
+				display: block;
+				position: absolute;
+				left:0;
+				top:0;
+				float:left;
+				width:5px;
+				content:"";
+				color:#58ACFA;
+				height: 100%;
+				background:#58ACFA;
+			}
+		#mainSection{
+			position: relative;
+			padding-left:200px;
+			width:100%;
+			height: 100%;
+		}
+			#runArea{
+				position: relative;
+				width:100%;
+				height:100%;
+				padding:0px 300px 0px 0px;
+			}
+				#runArea canvas{}
+			#scriptArea{
+				display:none;
+				width:100%;
+				height:100%;
+				background-color: #fff;
+				padding:0px 300px 0px 0px;
+			}
+			#stateArea{
+				position: absolute;
+				width:300px;
+				height: 100%;
+				background: #fff;
+				top:0;
+				right:1px;
+				border-left:1px solid #ddd;
+				z-index: 1;
+			}
+			#stateArea canvas{
+				border-bottom:1px solid #ddd;
+				z-index: 1;
+			}
+				#particleInfo{
+					position:absolute;
+					height: 300px;
+					z-index: 1;
+				}
+					#physicsInfo{
+						display: none;
+						position: absolute;
+						left:0;
+						min-width:120px;
+						min-height:100px;
+					}
+						#physicsInfo .float{
+							position: absolute;
+							width:100%;
+							height: 100%;
+							padding:5px;
+							left:0; top:0;
+						}
+						#physicsInfo .background{
+							opacity: 0.5;
+							background: #610B0B;
+						}
+						#physicsInfo .text{
+							color:#fff;
+							opacity: 1;
+							z-index: 1;
+							font-size:12px;
+						}
+				#addParticle{
+					z-index: 1;
+					position: absolute;
+					top:300px;
+				}
+				#addParticle:focus{outline: 0}
+				.kindBtnWrap{
+					z-index: 1;
+					width:100%;
+					position: absolute;
+					top:330px;
+				}
+					.kindproperty{
+						float: left;
+						width:50%!important;
+						margin:0!important;
+					}
+				#propertyArea{
+					width:100%;
+					height: 100%;
+					padding-top:360px;
+					height: 100%;
+				}
+					#vertexPlus{
+						position:absolute;right:0;top:0;
+						height: 100%;
+						padding: 5px 10px;
+						background:orange;
+						color:#fff;
+						cursor:pointer;
+					}
+					#propertyArea ul{
+						width: 100%;
+						height:100%;
+						list-style-type: none;
+						margin: 0;
+						padding: 0;
+						overflow-y: scroll;
+					}
+					#propertyArea ul li{
+						position: relative;
+						width:100%;
+						color:#333;
+						padding:5px 10px 5px 105px;
+						font-size: 13px;
+					}
+						#propertyArea ul li span{
+							position: absolute;
+							left:0;
+							display: block;
+							width:100px;
+							text-align: center
+						}
+						#propertyArea ul li input[type=text]{
+							width:100%;
+							padding-left:2px;
+						}
+					#propertyArea ul li.title{
+						background: #ddd;
+						padding:5px;
+						font-size:15px;
+					}
+					#propertyArea ul li.sub_title{
+						background: #eee;
+						padding:3px 5px;
+						font-size:13px;
+						border-left:10px solid #ddd;
+					}
+					#propertyArea ul li.comment{
+						padding:5px!important;
+					}
+					#propertyArea ul li.disabled{
+						background:#eee; cursor:not-allowed; border-bottom: 1px solid #ccc; margin-bottom: 1px;
+						  -webkit-touch-callout: none; /* iOS Safari */
+						  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+						  -khtml-user-select: none;    /* Konqueror */
+						  -moz-user-select: none;      /* Firefox */
+						  -ms-user-select: none;       /* Internet Explorer/Edge */
+						  user-select: none;           /* Non-prefixed version, currently
+						                                  not supported by any browser */						
+					}
+					.propertyList{display: none}
+					.physicsPropertyList{display:none;}
+					.selecMaintType{width:100%; border:0; background: #eee; padding: 5px 5px; border:1px solid #aaa;}
+					.selectNormalType{width:100%; border:0; border:1px solid #aaa;}
+
+/*에디터*/
+#cvss-editor{
+	width:100%;
+	height: 100%;
+	overflow-y:scroll;
+	padding:5px;
+	font-size:14px;
+}
+#cvss-editor:focus{
+	outline: 0;
+}
