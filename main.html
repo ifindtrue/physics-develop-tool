@@ -1,0 +1,911 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Physics Develop Tool</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+		<meta charset="utf8">
+		<link href="./css/stylesheet.css" rel="stylesheet">
+		<link href="./css/bootstrap.css" rel="stylesheet">
+		<script src="./js/cvss.0.2.js"></script>
+		<script src="./js/engine.js"></script>
+	</head>
+	<body>
+		<section class="container">
+			<nav id="projectNav">
+				<div class="btn btn-warning btn-block btn-lg" id="run" data-toggle="run">RUN</div>
+				<section class="importantBtnWrap">
+					<div class="btn-title">프로젝트</div>
+						<div class="btn btn-block btn-sm on sectionChange" data-type="runArea" style="border-bottom-width:0">그래픽</div>
+						<div class="btn btn-block btn-sm sectionChange" data-type="scriptArea">스크립트</div>
+					<hr/>
+					<div class="btn-title">리소스</div>
+						<div class="btn btn-block btn-sm" style="border-bottom-width:0">리소스 불러오기</div>
+						<div class="btn btn-block btn-sm">공유하기</div>
+					<hr/>
+					<div class="btn-title">기능</div>
+						<div class="btn btn-block btn-sm" style="border-bottom-width:0">js 파일로 반환</div>
+					<hr/>
+					<!--<div class="btn-help">?</div>-->
+					<article class="switchWrap">
+						<div class="alertBox" id="active_operationMode_alertBox">
+							작업모드가 활성화 되었습니다.
+						</div>
+						<label class="switch">
+						  <input type="checkbox" id="active_operationMode_checkbox">
+						  <div class="slider"></div>
+						</label>								
+					</article>
+				</section>
+
+			</nav>
+			<section id="mainSection" now-section="runArea">
+				<section id="runArea">
+					<canvas id="liveView">현재 브라우저는 html5를 지원하지 않습니다.</canvas>
+				</section>
+				<section id="scriptArea">
+					<!--자체제작 스크립트 에디터-->
+					<div id="cvss-editor" CONTENTEDITABLE active></div>
+				</section>
+				<article id="stateArea">
+					<section id="particleInfo">
+						<article id="physicsInfo">
+							<div class="float background"></div>
+							<div id="physicsPropertyText" class="float text">
+								<b>Physics Property</b><br/>
+								acceleration: <span data-type="a"></span></br/>
+								velocity: <span data-type="v"></span></br/>
+								a: <span data-type=""></span></br/>
+								<!--엔진을 실행하면 실행-->	
+							</div>
+						</article>
+						<canvas width=300 height=300 id="particleState">현재 브라우저는 html5를 지원하지 않습니다.</canvas>
+					</section>	
+					<button id="addParticle" class="btn radius-none btn-warning btn-block btn-sm">새로운 입자추가</button>
+					<div class="kindBtnWrap">
+						<div class="btn radius-none btn-danger btn-block btn-sm kindproperty" id="kindBtn_degine" style="border-right-width:0">디자인 속성</div>
+						<div class="btn radius-none btn-block btn-sm kindproperty" id="kindBtn_physics">물리 속성</div>
+					</div>
+					<!--
+						0:block
+						1:polygon
+						2:circle
+						3:text
+					-->
+					<section id="propertyArea">
+						<ul id="propertyArea_degine">
+							<!--BLOCK-->
+							<div class="propertyList" id="propertyList_block">							
+								<li class="title">기본설정</li>
+								<li><span>이름</span><input class="propertyInput" data-type="name" type="text"></li>
+								<li>
+									<span style="padding:5px;">타입</span>
+									<select class="propertyInput selecMaintType" data-type="type">
+										<option selected>block</option>
+										<option>polygon</option>
+										<option>circle</option>
+										<option>text</option>
+									</select>
+								</li>
+
+								<li class="title">위치</li>
+								<li><span>X</span><input class="propertyInput" data-type="x" type="text"></li>
+								<li><span>Y</span><input class="propertyInput" data-type="y" type="text"></li>
+								<li><span>origin</span><input class="propertyInput" data-type="origin" type="text"><br/><small>ex) <b>50% 50%</b> , <b>0% 100%</b> ...</small></li>
+								<li><span title="">zindex</span><input class="propertyInput" data-type="zindex" type="text"></li>
+							
+								<li class="title">크기</li>
+								<li><span>width</span><input class="propertyInput" data-type="width" type="text"></li>
+								<li class="sub_title">최소 최대</li>
+									<li><span>maxWidth</span><input class="propertyInput" data-type="maxWidth" type="text"></li>
+									<li><span>minWidth</span><input class="propertyInput" data-type="minWidth" type="text"></li>
+								<hr style="margin:5px 0; border-color:#ddd"/>
+								<li><span>height</span><input class="propertyInput" data-type="height" type="text"></li>
+								<li class="sub_title">최소 최대</li>
+									<li><span>maxHeight</span><input class="propertyInput" data-type="maxHeight" type="text"></li>
+									<li><span>minHeight</span><input class="propertyInput" data-type="minHeight" type="text"></li>
+								
+								<li class="title">디자인</li>
+								<li><span>background</span><input class="propertyInput" data-type="background" type="text"></li>
+								<li><span>opacity</span><input class="propertyInput" data-type="opacity" type="text"></li>
+								<li class="sub_title">테두리</li>
+								<li><span>border</span><input class="propertyInput" data-type="border" type="text"></li>
+								<li><span>borderWidth</span><input class="propertyInput" data-type="borderWidth" type="text"></li>
+								<li><span>borderColor</span><input class="propertyInput" data-type="borderColor" type="text"></li>
+
+					
+								<li class="title">이미지</li>
+								<li style="height:50px;"><span>background<br/>ImageSrc</span><input class="propertyInput" data-type="backgroundImageSrc" type="text"><br/><small>이미지의 주소를 입력해주세요</small></li>
+								<li style="height:50px;">
+									<span style="height:50px">background<br/>ImagePattern</span>
+								<select class="propertyInput selectNormalType" data-type="backgroundImagePattern">
+										<option>no-repeat</option>
+										<option>repeat</option>
+										<option>repeat-x</option>
+										<option>repeat-y</option>
+								</select>	
+								</li>
+								<li class="sub_title">이미지위치<br/><small>블럭내에서 출력될 이미지의 상대적인 위치를 지정</small></li>
+								<li style="height:50px"><span>background<br/>ImageX</span><input class="propertyInput" data-type="backgroundImageX" type="text"></li>
+								<li style="height:50px"><span>background<br/>ImageY</span><input class="propertyInput" data-type="backgroundImageY" type="text"></li>
+
+								<li class="title">회전 <small>(라디안)</small></li>
+								<li><span>rotate</span><input class="propertyInput" data-type="rotate" type="text"></li>
+								<li class="sub_title">회전 중심 <small>%(퍼센테이지)도 입력가능합니다</small></li>
+
+								<li><span>rotateOriginX</span><input class="propertyInput" data-type="rotateOriginX" type="text"></li>
+								<li><span>rotateOriginY</span><input class="propertyInput" data-type="rotateOriginY" type="text"></li>
+								
+								<li class="title">기타</li>
+								<li>
+									<span>cursor</span>
+									<select class="propertyInput selectNormalType" data-type="cursor">
+										<option value="alias">alias</option>
+										<option value="all-scroll">all-scroll</option>
+										<option value="auto">auto</option>
+										<option value="cell">cell</option>
+										<option value="context-menu">context-menu</option>
+										<option value="col-resize">col-resize</option>
+										<option value="copy">copy</option>
+										<option value="crosshair">crosshair</option>
+										<option value="default" selected>default</option>
+										<option value="e-resize">e-resize</option>
+										<option value="ew-resize">ew-resize</option>
+										<option value="grab">grab</option>
+										<option value="grabbing">grabbing</option>
+										<option value="help">help</option>
+										<option value="move">move</option>
+										<option value="n-resize">n-resize</option>
+										<option value="ne-resize">ne-resize</option>
+										<option value="nesw-resize">nesw-resize</option>
+										<option value="ns-resize">ns-resize</option>
+										<option value="nw-resize">nw-resize</option>
+										<option value="nwse-resize">nwse-resize</option>
+										<option value="no-drop">no-drop</option>
+										<option value="none">none</option>
+										<option value="not-allowed">not-allowed</option>
+										<option value="pointer">pointer</option>
+										<option value="progress">progress</option>
+										<option value="row-resize">row-resize</option>
+										<option value="s-resize">s-resize</option>
+										<option value="se-resize">se-resize</option>
+										<option value="sw-resize">sw-resize</option>
+										<option value="text">text</option>
+										<option value="URL">URL</option>
+										<option value="vertical-text">vertical-text</option>
+										<option value="w-resize">w-resize</option>
+										<option value="wait">wait</option>
+										<option value="zoom-in">zoom-in</option>
+										<option value="zoom-out">zoom-out</option>
+										<option value="initial">initial</option>
+										<option value="inherit">inherit</option>
+									</select>	
+								</li>
+							</div>
+
+							<!--POLYGON 폴리곤의 VERTEX 설정은 STATEcanvas로-->
+							<div class="propertyList" id="propertyList_polygon">
+								<li class="title">기본설정</li>
+								<li><span>이름</span><input class="propertyInput" data-type="name" type="text"></li>
+								<li>
+									<span style="padding:5px;">타입</span>
+									<select class="propertyInput selecMaintType" data-type="type">
+										<option>block</option>
+										<option selected>polygon</option>
+										<option>circle</option>
+										<option>text</option>
+									</select>
+								</li>
+								<li class="title">정점<div id="vertexPlus">추가</div></li>
+								<li style="padding:0">
+									<select vertex-index="0" selected-vertex-index="0" id="vertexInfo" style="width:100%; height:25px; margin-bottom:5px; background:#eee; border:0">
+										<option value="0">정점 1</option>
+									</select>
+								</li>
+								<li><span>X 성분</span><input class="propertyInput" data-type="vertex" id="Vx" lotation="0" type="text" placeholder="정점의 X성분"></li>
+								<li><span>Y 성분</span><input class="propertyInput" data-type="vertex" id="Vy" lotation="1" type="text" placeholder="정점의 Y성분"></li>
+								<li class="comment"><small>정점을 추가하면서 폴리곤을 제작하실 수 있습니다.<br/>이 속성은 원점을 첫 정점으로 <b><u>폴리곤의 형태를 정의합니다.</u></b></small></li>
+								<li class="title">위치 <small></small></li>
+								<li><span>X</span><input class="propertyInput" data-type="x" type="text"></li>
+								<li><span>Y</span><input class="propertyInput" data-type="y" type="text"></li>
+								<li><span>zindex</span><input class="propertyInput" data-type="zindex" type="text"></li>
+								
+								<li class="title">디자인</li>
+								<li><span>background</span><input class="propertyInput" data-type="background" type="text"></li>
+								<li><span>opacity</span><input class="propertyInput" data-type="opacity" type="text"></li>
+								<li class="sub_title">테두리</li>
+								<li><span>border</span><input class="propertyInput" data-type="border" type="text"></li>
+								<li><span>borderWidth</span><input class="propertyInput" data-type="borderWidth" type="text"></li>
+								<li><span>borderColor</span><input class="propertyInput" data-type="borderColor" type="text"></li>
+								<li class="sub_title">선 연결</li>
+								<li>
+									<span>lineJoin</span>
+									<select class="propertyInput selectNormalType" data-type="lineJoin">
+										<option value="bevel">bevel</option>
+										<option value="round">round</option>
+										<option value="miter">miter</option>
+									</select>
+								</li>
+								<li class="title">회전 <small>(라디안)</small></li>
+								<li class="comment"><small>폴리곤은 무게중심을 기준으로 회전합니다.</small></li>
+								<li><span>rotate</span><input class="propertyInput" data-type="rotate" type="text"></li>
+								<li class="title">기타</li>
+								<li>
+									<span>cursor</span>
+									<select class="propertyInput selectNormalType" data-type="cursor">
+										<option value="alias">alias</option>
+										<option value="all-scroll">all-scroll</option>
+										<option value="auto">auto</option>
+										<option value="cell">cell</option>
+										<option value="context-menu">context-menu</option>
+										<option value="col-resize">col-resize</option>
+										<option value="copy">copy</option>
+										<option value="crosshair">crosshair</option>
+										<option value="default" selected>default</option>
+										<option value="e-resize">e-resize</option>
+										<option value="ew-resize">ew-resize</option>
+										<option value="grab">grab</option>
+										<option value="grabbing">grabbing</option>
+										<option value="help">help</option>
+										<option value="move">move</option>
+										<option value="n-resize">n-resize</option>
+										<option value="ne-resize">ne-resize</option>
+										<option value="nesw-resize">nesw-resize</option>
+										<option value="ns-resize">ns-resize</option>
+										<option value="nw-resize">nw-resize</option>
+										<option value="nwse-resize">nwse-resize</option>
+										<option value="no-drop">no-drop</option>
+										<option value="none">none</option>
+										<option value="not-allowed">not-allowed</option>
+										<option value="pointer">pointer</option>
+										<option value="progress">progress</option>
+										<option value="row-resize">row-resize</option>
+										<option value="s-resize">s-resize</option>
+										<option value="se-resize">se-resize</option>
+										<option value="sw-resize">sw-resize</option>
+										<option value="text">text</option>
+										<option value="URL">URL</option>
+										<option value="vertical-text">vertical-text</option>
+										<option value="w-resize">w-resize</option>
+										<option value="wait">wait</option>
+										<option value="zoom-in">zoom-in</option>
+										<option value="zoom-out">zoom-out</option>
+										<option value="initial">initial</option>
+										<option value="inherit">inherit</option>
+									</select>	
+								</li>
+							</div>
+
+							<div class="propertyList" id="propertyList_circle">
+								<li class="title">기본설정</li>
+								<li><span>이름</span><input class="propertyInput" data-type="name" type="text"></li>
+								<li>
+									<span style="padding:5px;">타입</span>
+									<select class="propertyInput selecMaintType" data-type="type">
+										<option>block</option>
+										<option selected>polygon</option>
+										<option>circle</option>
+										<option>text</option>
+									</select>
+								</li>
+								<li class="title">반지름</li>
+								<li><span>r</span><input class="propertyInput" data-type="r" type="text"></li>
+								
+								<li class="title">위치</li>
+								<li><span>X</span><input class="propertyInput" data-type="x" type="text"></li>
+								<li><span>Y</span><input class="propertyInput" data-type="y" type="text"></li>
+								<li><span>origin</span><input class="propertyInput" data-type="origin" type="text"></li>
+								<li><span>zindex</span><input class="propertyInput" data-type="zindex" type="text"></li>
+
+								<li class="title">디자인</li>
+								<li><span>background</span><input class="propertyInput" data-type="background" type="text"></li>
+								<li><span>opacity</span><input class="propertyInput" data-type="opacity" type="text"></li>
+								<li class="sub_title">테두리</li>
+								<li><span>border</span><input class="propertyInput" data-type="border" type="text"></li>
+								<li><span>borderWidth</span><input class="propertyInput" data-type="borderWidth" type="text"></li>
+								<li><span>borderColor</span><input class="propertyInput" data-type="borderColor" type="text"></li>
+					
+								<li class="title">기타</li>
+								<li>
+									<span>cursor</span>
+									<select class="propertyInput selectNormalType" data-type="cursor">
+										<option value="alias">alias</option>
+										<option value="all-scroll">all-scroll</option>
+										<option value="auto">auto</option>
+										<option value="cell">cell</option>
+										<option value="context-menu">context-menu</option>
+										<option value="col-resize">col-resize</option>
+										<option value="copy">copy</option>
+										<option value="crosshair">crosshair</option>
+										<option value="default" selected>default</option>
+										<option value="e-resize">e-resize</option>
+										<option value="ew-resize">ew-resize</option>
+										<option value="grab">grab</option>
+										<option value="grabbing">grabbing</option>
+										<option value="help">help</option>
+										<option value="move">move</option>
+										<option value="n-resize">n-resize</option>
+										<option value="ne-resize">ne-resize</option>
+										<option value="nesw-resize">nesw-resize</option>
+										<option value="ns-resize">ns-resize</option>
+										<option value="nw-resize">nw-resize</option>
+										<option value="nwse-resize">nwse-resize</option>
+										<option value="no-drop">no-drop</option>
+										<option value="none">none</option>
+										<option value="not-allowed">not-allowed</option>
+										<option value="pointer">pointer</option>
+										<option value="progress">progress</option>
+										<option value="row-resize">row-resize</option>
+										<option value="s-resize">s-resize</option>
+										<option value="se-resize">se-resize</option>
+										<option value="sw-resize">sw-resize</option>
+										<option value="text">text</option>
+										<option value="URL">URL</option>
+										<option value="vertical-text">vertical-text</option>
+										<option value="w-resize">w-resize</option>
+										<option value="wait">wait</option>
+										<option value="zoom-in">zoom-in</option>
+										<option value="zoom-out">zoom-out</option>
+										<option value="initial">initial</option>
+										<option value="inherit">inherit</option>
+									</select>	
+								</li>
+							</div>
+
+							<!--TEXT-->
+							<div class="propertyList" id="propertyList_text">
+								<li class="title">기본설정</li>
+								<li><span>이름</span><input class="propertyInput" data-type="name" type="text"></li>
+								<li>
+									<span style="padding:5px;">타입</span>
+									<select class="propertyInput selecMaintType" data-type="type">
+										<option>block</option>
+										<option selected>polygon</option>
+										<option>circle</option>
+										<option>text</option>
+									</select>
+								</li>
+								<li class="title">내용</li>
+								<li><span>content</span><input class="propertyInput" data-type="content" type="text"></li>
+					
+								<li class="title">위치</li>
+								<li><span>X</span><input class="propertyInput" data-type="x" type="text"></li>
+								<li><span>Y</span><input class="propertyInput" data-type="y" type="text"></li>
+								<li><span>zindex</span><input class="propertyInput" data-type="zindex" type="text"></li>
+								
+								<li class="title">디자인</li>
+								<li><span>opacity</span><input class="propertyInput" data-type="opacity" type="text"></li>
+								<li class="sub_title">폰트</li>
+								<li><span>fontFamily</span><input class="propertyInput" data-type="fontFamily" type="text"></li>
+								<li><span>fontSize</span><input class="propertyInput" data-type="fontSize" type="text"></li>
+								<li><span>color</span><input class="propertyInput" data-type="color" type="text"></li>
+
+								<li class="title">정렬</li>
+								<li>
+									<span>textAlign</span>
+									<select class="propertyInput" data-type="textAlign">
+										<option value="start" selected>start</option>
+										<option value="end">end</option>
+										<option value="center">center</option>
+										<option value="left">left</option>
+										<option value="right">right</option>
+									</select>
+								</li>
+								<li>
+									<span>textBaseline</span>
+									<select class="propertyInput" data-type="textBaseline">
+										<option value="alphabetic" selected>alphabetic</option>
+										<option value="top">top</option>
+										<option value="hanging">hanging</option>
+										<option value="middle">middle</option>
+										<option value="ideographic">ideographic</option>
+										<option value="bottom">bottom</option>
+									</select>
+								</li>
+							</div>
+						</ul>
+						<ul id="propertyArea_physics" style="display:none">
+							<div class="physicsPropertyList">
+								<li class="title">기본속성</li>
+								<li>
+									<span>질량</span><input type="text" class="propertyInput_physics" data-type="m" placeholder="기본값 10"><br/>
+									<input type="checkbox" id="backgroundMass" style="position:relative; top:3px"><small>배경은 질량이 Infinity 입니다</small>
+								</li>
+								<li><span>관성모멘트</span><input type="text" class="propertyInput_physics" data-type="i" placeholder="기본값 10"></li>
+								<!--
+								<li class="sub_title">마찰</li>
+								<li><span>정적 마찰계수</span><input type="text"></li>
+								<li><span>동적 마찰계수</span><input type="text"></li>
+								-->
+								<li class="title">구속조건</li>
+								<li class="title">역학</li>
+								<li class="sub_title">선운동 <small>:선운동의 모든 속성값은 벡터로 표현됩니다</small></li>
+								<li><span>힘</span><input type="text" data-type="f" disabled></li>
+								<hr style="margin:5px; border-style:dotted;" />
+								<li><span>가속도</span><input type="text" data-type="a" disabled></li>
+								<li><span>속도</span><input type="text" data-type="v" disabled></small></li>
+								<li class="disabled">
+									<span>위치</span><small>물리속성의 위치는 디자인속성의 좌표로 표현됩니다</small><br/>
+									s<small>:기존위치+속도×시간</small>
+									<hr style="margin:5px" /><small style="color:#5d5d5d">(<b>가속도×(시간^2)/2</b>는 속도개선을 위해 제외)</small>
+								</li>
+
+								<li class="sub_title">각운동</li>
+								<li><span>토크</span><input type="text" data-type="t" disabled></li>
+								<hr style="margin:5px; border-style:dotted" />
+								<li><span>각가속도</span><input type="text" data-type="rA" disabled></li>
+								<li><span>각속도</span><input type="text" data-type="rV" disabled></li>
+								<li class="disabled">
+									<span>각도</span><small>물리속성의 각도는 디자인속성의 rotate속성으로 표현됩니다</small><br/>
+									위치 <small>:기존위치+속도×시간</small>
+									<hr style="margin:5px" /><small style="color:#5d5d5d">(<b>가속도×(시간^2)/2</b>는 속도개선을 위해 제외)</small>
+								</li>
+							</div>
+						</ul>
+					</section>
+				</article>
+			</section>
+		</section>
+		<script type="text/javascript">
+			var stateTarget=new Object(),//현재 선택된 입자의 정보
+				ENGINE,particleInfo={}; //run 전에 enigne에 등록될 입자들의 정보를 보관합니다.
+			window.onload=function(){
+				window.onresize=function(){
+					liveView.$canvas.width=document.documentElement.clientWidth-500;
+					liveView.$canvas.height=document.documentElement.clientHeight;
+					updateLiveCanvas();
+				}
+
+				//메인 캔버스를 로드합니다.
+				liveView=new Canvas("#liveView",function(){ //callback함수를 실행합니다.
+					this.$canvas.width=document.documentElement.clientWidth-500;
+					this.$canvas.height=document.documentElement.clientHeight;
+					this.drawElement("EVENT",{
+						onlyBaseElement:true
+					})
+					this.element("EVENT").click(function(e,key){
+						updateParticleState(key,liveView.element(key).getInfo())
+					});
+				});
+
+				var prevE;
+
+				//상태 캔버스를 로드합니다.
+				stateView=new Canvas("#particleState",function(){ //callback함수를 실행합니다.
+					this.$systemValue.rotateCenter=true;
+					var stateWrap=document.getElementById("particleInfo");
+					var th=this;
+					this.$canvas.onwheel=function(e){ // 마우스휠을 조작하여 축소 확돼기능을 구현합니다.
+						if(!stateTarget.name){
+							return
+						}
+						var direct=e.deltaY<0 ? 1 : 0;
+						var deltaScale=0.1;
+						var nowScale=th.element(stateTarget.name).cvss("scale");
+						var nowPosition=[th.element(stateTarget.name).cvss("x"),th.element(stateTarget.name).cvss("y")];
+					//	th.element(stateTarget.name).cvss("x",prevE.x-nowPosition[0])
+					//	th.element(stateTarget.name).cvss("y",prevE.y-nowPosition[1])
+
+						if(direct){
+							th.element(stateTarget.name).cvss("scale",[nowScale[0]+deltaScale,nowScale[1]+deltaScale]);
+						}else{
+							th.element(stateTarget.name).cvss("scale",[nowScale[0]-deltaScale,nowScale[1]-deltaScale]);
+						}
+					}	
+					this.drawElement({ //기본요소들을 등록합니다, 베이스이벤트를 지정하여 다른입자들에게 베이스요소의 이벤트 또는 스타일 속성을 종속시킬수 있습니다.
+						WINDOW:{
+							x:0,y:0,
+							width:this.$canvas.width,
+							height:this.$canvas.height,
+							zindex:1000
+						},
+						LOTATION:{
+							type:"text",
+							content:"",
+							fontSize:"12px",
+							fontFamily:"맑은 고딕",
+							x:this.$canvas.width-5,
+							textAlign:"right",
+							textBaseline:"top",
+							zindex:900
+						},
+						NAME:{
+							type:"text",
+							content:"",
+							fontSize:"15px",
+							fontFamily:"맑은 고딕",
+							x:10,
+							y:this.$canvas.height-10,
+							zindex:900
+						}
+					});
+					this.element("WINDOW").mousemove(function(e){
+						prevE=e;
+						this.element("LOTATION").cvss("content","x : "+e.x+" , y : "+e.y);
+					});
+					var prevPosition={x:0,y:0};
+					this.element("WINDOW").dragstart(function(e){
+						var position=th.element(stateTarget.name).cvss("translate");
+						prevPosition={x:e.x-position[0],y:e.y-position[1]};
+					})
+					this.element("WINDOW").drag(function(e){
+						if(!stateTarget.name){
+							return
+						}
+						if(prevPosition.x==e.x && prevPosition.y==e.y){
+							return
+						}
+
+						//e-prevP 는 결국 기존위치에서부터 현재위치까지로 이어지는 벡터이다
+						var nX=(e.x-prevPosition.x);
+						var nY=(e.y-prevPosition.y);
+						th.element(stateTarget.name).cvss("translate",[nX,nY]);
+					});
+				});
+
+				var run=document.getElementById("run"); //엔진실행버튼
+				var inputs=document.getElementsByClassName("propertyInput"); //디자인속성 입력폼
+				var physicsProperty=document.getElementsByClassName("propertyInput_physics"); // 물리속성 입력폼
+				var kindproperty=document.getElementsByClassName("kindproperty");
+				var vertexPlus=document.getElementById("vertexPlus");
+				var addParticleBtn=document.getElementById("addParticle");
+				var sectionChange=document.getElementsByClassName("sectionChange");
+				var physicsInfo=document.getElementById("physicsInfo");
+				var vertexInfo=document.getElementById("vertexInfo");
+				var backgroundMass=document.getElementById("backgroundMass");
+
+				//디자인속성값을 입력하는 input들을 모두 불러옵니다.
+				//불러온 input들의 속성에 click시에 updateProperty에 input.value를 전달하라는 함수를 일괄적으로 적용합니다.
+				for(var i=0; i<inputs.length; i++){
+					inputs[i].onchange=function(){
+						updateProperty(this.getAttribute("data-type"),this)
+					};
+				}
+				//물리속성값을 입력하는 input들을 모두 불러옵니다.
+				//마찬가지로 input이 onchange했을 때, 알맞은 속성에 input.value를 적용합니다.
+				for(i=0; i<physicsProperty.length; i++){
+					physicsProperty[i].onchange=function(){
+						particleInfo[stateTarget.name][this.getAttribute("data-type")]=this.value;
+					}
+				}
+				//물리속성과 디자인속성의 toggle을 관리하는 함수입니다.
+				for(i=0; i<kindproperty.length; i++){
+					kindproperty[i].onclick=function(){
+						var active=this.getAttribute("data-toggle");
+						if(active=="active"){
+							return;
+						}else{
+							this.classList.add("btn-danger");
+							this.setAttribute("data-toggle","active");
+							var on=this.getAttribute("id")=="kindBtn_degine" ? "physics" : "degine";
+							var o=document.getElementById("kindBtn_"+on);
+							o.classList.remove("btn-danger");
+							o.removeAttribute("data-toggle");
+
+							var t=(on=="physics") ? "degine" : "physics"
+							var showProperty=document.getElementById("propertyArea_"+t);
+							var hideProperty=document.getElementById("propertyArea_"+on);
+							hideProperty.style.display="none"
+							showProperty.style.display="block"
+						}
+					}
+				}
+
+				for(i=0; i<sectionChange.length;i++){
+					sectionChange[i].onclick=function(){
+						var clickSection=this.getAttribute("data-type");
+						var mainSection=document.getElementById("mainSection");
+						var nowSection=mainSection.getAttribute("now-section")
+						if(clickSection==nowSection){return}
+						
+						for(var j=0; j<sectionChange.length; j++){
+							if(sectionChange[j].getAttribute("data-type")==nowSection){
+								sectionChange[j].classList.remove("on")
+								break;
+							}
+						}
+						this.classList.add("on");
+
+						document.getElementById(clickSection).style.display="block";
+						document.getElementById(nowSection).style.display="none";
+						mainSection.setAttribute("now-section",clickSection);
+
+					}
+				}
+				//updateProperty는 속성을 cvssElement에 적용
+				function updateProperty(type,element){
+					if(type=="vertex"){
+						var index=vertexInfo.getAttribute("selected-vertex-index");
+						var vertex=liveView.element(stateTarget.name).cvss("vertex");
+						if(!vertex){
+							vertex=[]
+						}
+						if(Object.prototype.toString.call( vertex[index] ) !== '[object Array]'){
+							vertex[index]=[];
+						}
+						vertex[index][element.getAttribute("lotation")]=element.value;
+						liveView.element(stateTarget.name).cvss("vertex",vertex);
+						updateParticleState(stateTarget.name)
+						return ;
+					}else if(type=="name"){
+						if(liveView.element(stateTarget.name).rename(element.value)){
+							stateView.element(stateTarget.name).rename(element.value);
+							stateTarget.name=element.value;
+							//엔진 particle 이름
+							updateParticleState(stateTarget.name);
+						}else{
+							alert(element.value+"는 이미 존재하는 이름입니다.")
+						}
+					}else{
+						var obj=new Object();
+						obj[type]=element.value;						
+						updateLiveCanvas(stateTarget.name,obj);
+					}
+				}
+				function updateLiveCanvas(name,info){
+					//이함수는 메인캔버스에 전달받은 변수들로 요소를 업데이트하거나 추가합니다.
+					if(!name){
+						liveView.drawElement({});
+						return
+					}
+					liveView.drawElement(name,info);
+					//또한 전달인자가 없는경우를 제외하고 updateParticleState에 새로등록한 요소의 이름을 넘겨 함수를 실행합니다.
+					updateParticleState(name);
+				}
+				function updateParticleState(name){ // 이함수는 전달받은 이름의 요소를 상태창에 그릴뿐만아니라, 속성을 입력하는 input를 일괄적으로 업데이트합니다.
+					var info=Canvas.prototype.CopyObj(liveView.$element[name]);
+					info.width=info.$width;
+					info.height=info.$height;
+
+					if(liveView.$systemValue.EVENT[name].center){ //무게중심을 계산할 수있 입자만을 중앙에 위치한다
+						info.x=stateView.$canvas.width/2-(liveView.$systemValue.EVENT[name].center[0]-liveView.element(name).cvss("$x"));
+						info.y=stateView.$canvas.height/2-(liveView.$systemValue.EVENT[name].center[1]-liveView.element(name).cvss("$y"));
+					}else{
+						info.x=0;
+						info.y=0;
+					}
+					if(stateTarget.name){
+						stateView.element(stateTarget.name).remove();
+					}
+					stateView.drawElement(name,info);
+					stateView.element("NAME").cvss("content",name);
+
+					if(stateTarget.property){
+						var list=document.getElementById("propertyList_"+stateTarget.property.type);
+						list.style.display="none";
+					}
+
+					//현재 클릭한 입자의 정보
+					stateTarget.name=name;
+					stateTarget.property=liveView.element(name).getInfo();
+					
+					var list=document.getElementById("propertyList_"+stateTarget.property.type);
+					list.style.display="block";
+						
+					var vertex=liveView.element(stateTarget.name).cvss("vertex");
+		
+					var inputs=document.getElementsByClassName("propertyInput");
+
+					var Key=Object.keys(stateTarget.property);
+					
+					vertexInfo.length=0;
+					var length=(stateTarget.property.vertex && stateTarget.property.vertex.length) || 0;
+					for(i=0; i<length; i++){
+						vertexInfo.options.add(new Option("정점 "+Number(i+1),String(i)));
+					}
+					vertexInfo.setAttribute("selected-vertex-index",length-1);
+					vertexInfo.options[length-1].selected=true;
+
+
+					for(var i=0; i<physicsProperty.length; i++){
+						if(physicsProperty[i].getAttribute("data-type")=="m"){
+							if(particleInfo[stateTarget.name] && particleInfo[stateTarget.name].m=="Infinity"){
+								physicsProperty[i].setAttribute("disabled",true);
+								backgroundMass.checked=true;
+							}else{
+								physicsProperty[i].removeAttribute("disabled");	
+								backgroundMass.checked=false;
+							}
+							break;
+						}
+					}					
+					for(var i=0; i<inputs.length; i++){
+						var item=inputs[i];
+						var type=item.getAttribute("data-type");
+						var index=Key.indexOf(type);
+
+						if(type=="name"){
+							item.value=name;
+							continue;
+						}
+						if(type=="vertex"){
+							var lotation=item.getAttribute("lotation");
+							var seletedIndex=vertexInfo.getAttribute("selected-vertex-index");
+							if(vertex && vertex[seletedIndex] && vertex[seletedIndex][item.getAttribute("lotation")]){
+								item.value=vertex[seletedIndex][item.getAttribute("lotation")];
+							}
+							continue;
+						}
+
+						if(index!==-1){
+							item.value=stateTarget.property[Key[index]];
+						}else{
+							if(type=="cursor"){
+								item.value="default";
+								continue;
+							}
+							if(item.getAttribute("type")=="text"){
+								item.value=""
+								item.setAttribute("placeholder","아직 등록된 값이 없습니다");
+							}
+						}
+					}
+					var physicsPropertyList=document.getElementsByClassName('physicsPropertyList');
+					for(var i=0; i<physicsPropertyList.length; i++){
+						physicsPropertyList[i].style.display="block";
+					}
+					var physicsPropertyInput=document.getElementsByClassName("propertyInput_physics");
+					for(i=0; i<physicsPropertyInput.length; i++){
+						var element=physicsPropertyInput[i];
+						var property=element.getAttribute("data-type");
+						if(!particleInfo[stateTarget.name] || !particleInfo[stateTarget.name][property]){
+							element.value=Engine.prototype.basicParticle[property];
+						}else{
+							element.value=particleInfo[stateTarget.name][property];
+						}
+					}
+
+				}
+
+				//입자를 추가하는 버튼을 클릭하면 새로운 입자를 cvssCanvas 자세히말하자면 liveView 캔버스에 추가합니다
+				vertexPlus.onclick=function(){
+					var index=Number(vertexInfo.getAttribute("vertex-index"));
+					
+					obj=liveView.element(stateTarget.name).cvss("vertex");
+					if(obj && obj[index] && (!isNaN(obj[index][0]) && !isNaN(obj[index][1]))){
+						index++;
+						vertexInfo.options.add(new Option("정점 "+(index+1),index));
+						vertexInfo.options[index].selected=true;
+						vertexInfo.setAttribute("vertex-index",index);
+						vertexInfo.setAttribute("selected-vertex-index",index);		
+						document.getElementById("Vx").value="";
+						document.getElementById("Vy").value="";
+					}
+				}
+
+
+				addParticleBtn.onclick=function(){
+					//init엘레먼트
+					var name="particle"+(liveView.$elementKey.length);
+					updateLiveCanvas(name,{
+						type:"block",
+						background:"#aaa",
+						x:Math.floor(Math.random()*liveView.$canvas.width),
+						y:Math.floor(Math.random()*liveView.$canvas.height),
+						baseEventElement:"EVENT",
+						rotate:0,
+						vertex:[[50,0],[50,100]]
+					});
+					particleInfo[name]=new Object();
+
+				}
+				/*바운딩박스 체크함수
+				setInterval(function(){
+					if(!stateTarget.name){
+						return;
+					}
+					var box=liveView.$systemValue.boundingBox[stateTarget.name];
+
+					liveView.drawElement({
+						n:{
+							x:box.left,
+							y:box.top,
+							width:Math.abs(box.right-box.left),
+							height:Math.abs(box.top-box.bottom),
+							background:"red"
+						}
+					});
+				},1000);
+				*/
+				run.onclick=function(){
+					if(this.getAttribute("data-toggle")=="run"){
+						ENGINE=new Engine(liveView,{
+							fps:60,
+							gravity:[0,10]
+						});
+						var particleInfoKey=Object.keys(particleInfo);
+						for(var i=0; i<particleInfoKey.length; i++){
+							ENGINE.particle(particleInfoKey[i],particleInfo[particleInfoKey[i]]);
+						}
+						this.innerHTML="STOP";
+						this.classList.remove("btn-warning");	
+						this.classList.add("btn-danger");
+						this.setAttribute("data-toggle","stop");
+						addParticle.setAttribute("disabled",true);
+						for(i=0; i<inputs.length; i++){
+							inputs[i].setAttribute("disabled",true);
+						}
+						for(i=0; i<physicsProperty.length; i++){
+							physicsProperty[i].setAttribute("disabled",true);
+						}
+						backgroundMass.setAttribute("disabled",true)
+
+						physicsInfo.style.display="block"
+						physicsInfo.style.opacity=1;
+
+					}else{
+						ENGINE.stop();
+						this.innerHTML="RUN";
+						this.setAttribute("data-toggle","run")						
+						this.classList.add("btn-warning");	
+						this.classList.remove("btn-danger");
+						addParticle.removeAttribute("disabled")
+						for(i=0; i<inputs.length; i++){
+							inputs[i].removeAttribute("disabled");
+						}
+						backgroundMass.removeAttribute("disabled")
+						for(i=0; i<physicsProperty.length; i++){
+							if(physicsProperty[i].getAttribute("data-type")=="m" && backgroundMass.checked==true){
+								continue
+							}							
+							physicsProperty[i].removeAttribute("disabled");
+						}		
+						physicsInfo.style.display="none";
+					}
+				}
+				document.getElementById("vertexInfo").onchange=function(){
+					var vertexInfo=document.getElementById("vertexInfo");
+					this.setAttribute("selected-vertex-index",Number(this.value));
+					var vertex=liveView.element(stateTarget.name).cvss("vertex");
+					if(vertex[this.value]){
+						document.getElementById('Vx').value=vertex[this.value][0];
+						document.getElementById('Vy').value=vertex[this.value][1];
+					}
+				}
+
+				var	active_operationMode_checkbox=document.getElementById("active_operationMode_checkbox");
+				var active_operationMode_Timer;
+
+				var alertBox=document.getElementById("active_operationMode_alertBox");
+
+				active_operationMode_checkbox.onclick=function(){
+					clearTimeout(active_operationMode_Timer);
+					if(this.checked){
+						alertBox.style.display="block";
+						alertBox.style.opacity=1;
+						active_operationMode_Timer=setTimeout(function(){
+							alertBox.style.opacity=0;
+						},3000);
+					}else{
+						alertBox.style.opacity=0;
+					}
+				}
+				alertBox.onclick=function(){
+					alertBox.style.display="none";
+				}
+				backgroundMass.onclick=function(){
+					for(var i=0; i<physicsProperty.length; i++){
+						if(physicsProperty[i].getAttribute("data-type")=="m"){
+							var input_target=physicsProperty[i];
+
+							switch(this.checked){
+								case true:
+									input_target.value="Infinity";
+									particleInfo[stateTarget.name].m="Infinity"
+									input_target.setAttribute("disabled",true);
+									break;
+								default:
+									input_target.value=Engine.prototype.basicParticle.m;
+									particleInfo[stateTarget.name].m=Engine.prototype.basicParticle.m
+									input_target.removeAttribute("disabled");	
+									break;
+							}
+							break;
+						}
+					}
+				}
+			}
+
+
+		</script>
+	</body>
+</html>
