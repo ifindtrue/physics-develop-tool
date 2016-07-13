@@ -107,7 +107,7 @@
 			for(i=0; i<particleKey.length; i++){
 				var drawElement=this.$canvas.$element[particleKey[i]];
 				/*적분기*/
-				if(this.integrator(this.$particle[particleKey[i]],sysInfo.engineTime,this.$particle[particleKey[i]].applyGravity)){
+				if(this.integrator(this.$particle[particleKey[i]],sysInfo.engineTime)){
 					/*위치 업데이트*/
 					drawElement.x=this.$particle[particleKey[i]].s[0];
 					drawElement.y=this.$particle[particleKey[i]].s[1];
@@ -125,7 +125,7 @@
 		}
 	};
 
-	Engine.prototype.integrator=function(particle,duration,g){
+	Engine.prototype.integrator=function(particle,duration){
 		//F(힘)=m(질량)*a(가속도)
 			//a(가속도)=f/m
 			//v(속도)=at+v0
@@ -136,15 +136,17 @@
 
 		particle.s=Vector.sum(particle.s,Vector.multiply(particle.v,duration)); //위치업데이트
 		particle.a=Vector.multiply(particle.f,particle.inverseMass);
-		var gravity=g ? this.$systemValue.gravity : [0,0];
-		
+		var gravity=(particle.applyGravity && !particle.isStop) ? this.$systemValue.gravity : [0,0];
+
+
 		particle.v=Vector.sum(particle.v,Vector.sum(Vector.multiply(particle.a,duration),gravity)); 
+		if(Vector.pow_length(particle.v)>=1){
+			particle.isStop=false;
+		}
 		/*댐핑 추가*/
 		//particle.v=Vector.multiply(Vector.sum(particle.v,Vector.sum(Vector.multiply(particle.a,duration),gravity)),this.$systemValue.dammping); 
 		particle.f=[0,0];
 		
-
-
 		/*각 운동*/
 		//(토크)=(강체의 중심으로부터 힘이작용되는점의 상대위치)X(벡터곱)F
 			//rA(각가속도)=(토크)/I(관성모멘트)
@@ -316,20 +318,27 @@
 		return
 	}
 	Engine.prototype.REALcollisionDetection=function(t,o,duration){
+		var tProperty=this.$particle[t]; //타켓 파티클의 속성값
+		var oProperty=this.$particle[o]; //파티클의 속성값
+		
+		if(tProperty.inverseMass==0 && oProperty.inverseMass==0){
+			return;
+		}
+		if(tProperty.isStop && oProperty.isStop){ //정지(에 근접한) 물체 끼리 충돌했을 경우 얼리아웃
+			return;
+		}
+
 		//정밀충돌감지를 들어가기전에 바운딩박스충돌을 검사한다.
 		var	A=this.$canvas.$systemValue.boundingBox[t];
 		var	B=this.$canvas.$systemValue.boundingBox[o];
-
 		if(A.top>B.bottom || A.right<B.left || A.bottom<B.top || A.left>B.right){
 			return;
 		}
+
+
 		//정밀충돌감지
 		var GJK=this.GJK,
-			MAX_iteration=10;
-		
-		var tProperty=this.$particle[t]; //타켓 파티클의 속성값
-		var oProperty=this.$particle[o]; //파티클의 속성값
-
+			MAX_iteration=10;	
 		//particleKey를 참조한다.
 		var KEY=this.$particleKey; 
 			// 이동거리 = 나중위치-현재위치
@@ -337,7 +346,6 @@
 			tV=this.$canvas.$systemValue.EVENT[t].vertex; 
 
 			oV=this.$canvas.$systemValue.EVENT[o].vertex;
-
 		if(tV.length<3 || oV.length<3){
 			return;
 		}
@@ -362,13 +370,11 @@
 		while(iteration<MAX_iteration){
 			tempI=Canvas.prototype.CopyObj(saveIndex);
 
-
 			if(simplexVertex.length>1){
 				if(!GJK.getClosestdata(simplexVertex,[0,0],oSave,saveIndex,savePoint)){
 					break;
 				}
 			}
-
 			//새로 추가할 정점탐색을 시작한다
 			var d=GJK.searchDirection(simplexVertex);
 		
@@ -431,18 +437,12 @@
 		this.collisionProcessing([t,o],duration,collisionData)
 	}
 	
-
-
-
-
 	//GJK 알고리즘 구현을 위한 메소드들을 추가한다
 
 	//simplex를 민코스키의 차집합,
 	//simplexVertx를 선택한점의 집합으로 정의한다.
 
-
-
-		Engine.prototype.collisionProcessing=function(particle,duration,contactData){ //충돌 처리
+	Engine.prototype.collisionProcessing=function(particle,duration,contactData){ //충돌 처리
 		var A=this.$particle[particle[0]];
 		var B=this.$particle[particle[1]];
 	
@@ -511,8 +511,15 @@
 		//(충격토크)=Qrel(외적)충격량
 		A.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[0]].center)),Vector.multiply(deltaVelocityA,A.inverseMass))*A.inverseI;
 		B.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[1]].center)),Vector.multiply(deltaVelocityB,B.inverseMass))*B.inverseI;
-
-
+		
+		A.isStop=Vector.pow_length(A.v)<1;
+		B.isStop=Vector.pow_length(B.v)<1;
+		if(A.isStop){
+			A.v=[0,0];
+		}
+		if(B.isStop){
+			B.v=[0,0];
+		}
 		return;
 	}
 
@@ -788,6 +795,9 @@
 		},
 		length:function(v){ // 벡터의 길이(크기)
 			return Math.sqrt(v[0]*v[0]+v[1]*v[1])
+		},
+		pow_length:function(v){
+			return v[0]*v[0]+v[1]*v[1];
 		},
 		reverse:function(val){
 			return [val[1],val[0]]
