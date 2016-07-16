@@ -49,6 +49,7 @@
 			this.$checkContact=new Object();
 		this.$particleKey=new Array();
 		this.eventFunc={};
+		this.updateParticle=false;
 		this.$gearSystem();
 	}
 	Engine.prototype.basicEngineInfo={
@@ -100,11 +101,12 @@
 
 			this.applyParticleProperty(); //대기열에 있는 입자의 변경된속성들을 일괄적용
 			
-			for(i=0; i<particleKey.length; i++){
-				this.collisionDetection(sysInfo.engineTime); // 충돌검출 및 처리
-			}
+			this.collisionDetection(sysInfo.engineTime); // 충돌검출 및 처리
 				
 			for(i=0; i<particleKey.length; i++){
+				if(this.$updateParticle){
+					this.$particle[particleKey[i]].isStop=false;
+				}
 				var drawElement=this.$canvas.$element[particleKey[i]];
 				/*적분기*/
 				if(this.integrator(this.$particle[particleKey[i]],sysInfo.engineTime)){
@@ -117,7 +119,7 @@
 					//drawElement.rotate=Math.acos(this.$particle[particleKey[i]].r[0]); //적용
 				}
 			}
-
+			this.$updateParticle=false;
 		}
 		if(sysInfo.delta>sysInfo.interval){
 			this.$canvas.drawElement(this.$canvas.$element);
@@ -143,10 +145,11 @@
 		if(Vector.pow_length(particle.v)>=1){
 			particle.isStop=false;
 		}
+
 		/*댐핑 추가*/
 		//particle.v=Vector.multiply(Vector.sum(particle.v,Vector.sum(Vector.multiply(particle.a,duration),gravity)),this.$systemValue.dammping); 
 		particle.f=[0,0];
-		
+	
 		/*각 운동*/
 		//(토크)=(강체의 중심으로부터 힘이작용되는점의 상대위치)X(벡터곱)F
 			//rA(각가속도)=(토크)/I(관성모멘트)
@@ -163,6 +166,7 @@
 	}
 	Engine.prototype.stop=function(){
 		cancelAnimationFrame(this.loop);
+		this.$updateParticle=true;
 	}
 	Engine.prototype.particle=function(key,info){
 		if(!this.$canvas.$element[key]){
@@ -173,6 +177,7 @@
 		var basicParticle=Engine.prototype.basicParticle;
 		/*particleStack은 명령어를 수행할 입자를 저장하는 역할을 한다*/
 		/*각 명령은 대부분 particleStack.pop() 을통해 대상이되는 입자를 pop한다.*/
+		this.$updateParticle=true;
 		switch(newParticle){
 			case true: //for문을 통하여 자동화 하여되지만, 편한관리와 버그방지를 위하여 나열식으로 작성한다.
 				//나눗셈이 곱셈보다 몇십배 느리기 때문에 역질량을 설정해 곱셈을 사용한다
@@ -232,6 +237,7 @@
 				this.$particle[key[i]][subKey[j]]=obj[key[i]][subKey[j]];
 				delete obj[key[i]][subKey[j]]
 			}
+			this.$updateParticle=true;
 
 			this.$particle[key[i]].inverseMass=1/this.$particle[key[i]].m; //역질량 재설정
 			this.$particle[key[i]].inverseI=1/this.$particle[key[i]].i; //역관성모멘트 재설정
@@ -308,23 +314,19 @@
 	
 	/*충돌감지 및 충돌처리***********************************************************/
 
-
 	Engine.prototype.collisionDetection=function(duration){
 		for(var i=0; i<this.$particleKey.length; i++){
 			for(var j=i+1; j<this.$particleKey.length; j++){
 				this.REALcollisionDetection(this.$particleKey[i],this.$particleKey[j],duration)
 			}
 		}
-		return
+		return;
 	}
 	Engine.prototype.REALcollisionDetection=function(t,o,duration){
 		var tProperty=this.$particle[t]; //타켓 파티클의 속성값
 		var oProperty=this.$particle[o]; //파티클의 속성값
 		
-		if(tProperty.inverseMass==0 && oProperty.inverseMass==0){
-			return;
-		}
-		if(tProperty.isStop && oProperty.isStop){ //정지(에 근접한) 물체 끼리 충돌했을 경우 얼리아웃
+		if((tProperty.isStop || tProperty.inverseMass==0) && (oProperty.isStop || oProperty.inverseMass==0)){ //정지(에 근접한) 물체 끼리 충돌했을 경우 얼리아웃
 			return;
 		}
 
@@ -334,7 +336,6 @@
 		if(A.top>B.bottom || A.right<B.left || A.bottom<B.top || A.left>B.right){
 			return;
 		}
-
 
 		//정밀충돌감지
 		var GJK=this.GJK,
@@ -349,6 +350,7 @@
 		if(tV.length<3 || oV.length<3){
 			return;
 		}
+		console.log("a")
 		//민코스키의 차집합 : tV-oV
 		var initialVal={
 			o:oV[0],
@@ -445,7 +447,8 @@
 	Engine.prototype.collisionProcessing=function(particle,duration,contactData){ //충돌 처리
 		var A=this.$particle[particle[0]];
 		var B=this.$particle[particle[1]];
-	
+
+
 		if(typeof this.eventFunc[particle[0]].collision=="function"){
 			this.eventFunc[particle[0]].collision.apply(this,[particle[1]])
 		}
@@ -469,14 +472,12 @@
 
 		//충돌데이터와 물체의 질량에 근거하여 위치를 조정한다.
 		//(충돌깊이)=(A위치의 변화량)+(B위치의 변화량)
-		/*
 		if(contactData.deph>0 && totalInverseMass>0){
 			//역질량을 기준으로하면 여러에러와 연산속도가 빨라진다.
 			var totalMove=Vector.multiply(contactData.normal,(contactData.deph/totalInverseMass));
 			A.s=Vector.sum(A.s,Vector.multiply(totalMove,A.inverseMass));
 			B.s=Vector.sum(B.s,Vector.negate(Vector.multiply(totalMove,B.inverseMass)));
 		}
-		*/
 		var separatingV=Vector.dotProduct(Vector.sub(A.v,B.v),contactData.normal);	
 		if(separatingV>0){
 			return;
@@ -509,17 +510,19 @@
 
 		//(각도변화)=I^-1*u(충격토크)
 		//(충격토크)=Qrel(외적)충격량
-		A.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[0]].center)),Vector.multiply(deltaVelocityA,A.inverseMass))*A.inverseI;
-		B.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[1]].center)),Vector.multiply(deltaVelocityB,B.inverseMass))*B.inverseI;
+		//A.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[0]].center)),Vector.multiply(deltaVelocityA,A.inverseMass))*A.inverseI;
+		//B.rV+=Vector.cross(Vector.normalize(Vector.sub(contactData.point,this.$canvas.$systemValue.EVENT[particle[1]].center)),Vector.multiply(deltaVelocityB,B.inverseMass))*B.inverseI;
 		
-		A.isStop=Vector.pow_length(A.v)<1;
-		B.isStop=Vector.pow_length(B.v)<1;
-		if(A.isStop){
+		if(Vector.pow_length(A.v)<1){
+			A.isStop=true;			
 			A.v=[0,0];
 		}
-		if(B.isStop){
+		if(Vector.pow_length(B.v)<1){
+			B.isStop=true;			
 			B.v=[0,0];
 		}
+
+
 		return;
 	}
 
@@ -756,12 +759,6 @@
 				}
 			}
 			return result;
-		}
-	}
-	Engine.prototype.boundingBox={
-		new:function(position){
-		},
-		overwrap:function(){
 		}
 	}
 	/*벡터 합수 접근성의 용이함을 위해 window.Vector로 선언한다.*/
