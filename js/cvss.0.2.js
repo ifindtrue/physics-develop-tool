@@ -491,11 +491,11 @@ made by
 						if(E.rotate){ //transform
 							E.rotate=numberFormat(E.rotate,$E && $E.rotate,initElement.rotate,false);
 							if(sys.rotateCenter===true){
-							E.rotateOriginX=E.width/2;
-							E.rotateOriginY=E.height/2;
+								E.rotateOriginX=width/2;
+								E.rotateOriginY=height/2;
 							}else{
-							E.rotateOriginX=numberFormat(persentFormat(E.width,E.rotateOriginX,initElement.rotateOriginX),($E && $E.rotateOriginX),initElement.rotateOriginX);
-							E.rotateOriginY=numberFormat(persentFormat(E.height,E.rotateOriginY,initElement.rotateOriginY),($E && $E.rotateOriginY),initElement.rotateOriginY);
+								E.rotateOriginX=numberFormat(persentFormat(width,E.rotateOriginX,initElement.rotateOriginX),($E && $E.rotateOriginX),initElement.rotateOriginX);
+								E.rotateOriginY=numberFormat(persentFormat(height,E.rotateOriginY,initElement.rotateOriginY),($E && $E.rotateOriginY),initElement.rotateOriginY);
 							}
 							var cos=Math.cos(E.rotate);
 							var sin=Math.sin(E.rotate);
@@ -630,8 +630,8 @@ made by
 								event.vertex[0]=[0,0];
 
 								for(j=0; j<E.vertex.length; j++){
-									if(isNaN(Number(E.vertex[j][0])) || isNaN(Number(E.vertex[j][1]))){
-										pass=1;
+									if(Object.prototype.toString.call( E.vertex[j] ) !== '[object Array]' || isNaN(Number(E.vertex[j][0])) || isNaN(Number(E.vertex[j][1]))){
+										pass=0;
 										break;
 									}
 
@@ -650,23 +650,23 @@ made by
 								C.translate(x,y); //좌표이동
 								
 								//회전에 관해 보정및 출력
-									//AREA를 구합니다
-									var area=0,temp,center=[0,0];
-									for(j=0; j<event.vertex.length; j++){
-										temp=(j==event.vertex.length-1) ? 0 : j+1;
-										area+=(event.vertex[j][0]+event.vertex[temp][0])*(event.vertex[j][1]-event.vertex[temp][1])
-									}
-									area=Math.abs(area)/2;
-									for(j=0; j<event.vertex.length; j++){
-										temp=(j==event.vertex.length-1) ? 0 : j+1;
-										center[0]+=(event.vertex[j][0]+event.vertex[temp][0])*(event.vertex[j][0]*event.vertex[temp][1]-event.vertex[temp][0]*event.vertex[j][1]);
-										center[1]+=(event.vertex[j][1]+event.vertex[temp][1])*(event.vertex[j][0]*event.vertex[temp][1]-event.vertex[temp][0]*event.vertex[j][1]);							
-									}
-									center[0]/=-6*area;
-									center[1]/=-6*area;
-									
-									event.area=area;
-									event.center=center;
+								//AREA를 구합니다
+								var area=0,temp,center=[0,0];
+								for(j=0; j<event.vertex.length; j++){
+									temp=(j==event.vertex.length-1) ? 0 : j+1;
+									area+=(event.vertex[j][0]+event.vertex[temp][0])*(event.vertex[j][1]-event.vertex[temp][1])
+								}
+								area=Math.abs(area)/2;
+								for(j=0; j<event.vertex.length; j++){
+									temp=(j==event.vertex.length-1) ? 0 : j+1;
+									center[0]+=(event.vertex[j][0]+event.vertex[temp][0])*(event.vertex[j][0]*event.vertex[temp][1]-event.vertex[temp][0]*event.vertex[j][1]);
+									center[1]+=(event.vertex[j][1]+event.vertex[temp][1])*(event.vertex[j][0]*event.vertex[temp][1]-event.vertex[temp][0]*event.vertex[j][1]);							
+								}
+								center[0]/=-6*area;
+								center[1]/=-6*area;
+								
+								event.area=area;
+								event.center=center;
 
 								if(E.rotate){
 

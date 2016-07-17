@@ -48,7 +48,6 @@
 			this.$particleStack=new Array();
 			this.$checkContact=new Object();
 		this.$particleKey=new Array();
-		this.eventFunc={};
 		this.updateParticle=false;
 		this.$gearSystem();
 	}
@@ -86,6 +85,7 @@
 		contactHandling:"boolean",
 		applyGravity:"boolean",
 		restitution:"number",
+		style:"string"
 	};
 	// 1000ms/fps 1000ms 1초를 fps로 나눔
 	Engine.prototype.$gearSystem=function(){
@@ -126,7 +126,13 @@
 			sysInfo.then=sysInfo.now-(sysInfo.delta%sysInfo.interval);
 		}
 	};
-
+	Engine.prototype.rename=function(rN){
+		var particleName=this.$particleStack.pop();
+		if(typeof rN!="string" && this.$particle[rN]){
+			return
+		}
+		this.$particle[rN]=this.$particle[particleName];
+	}
 	Engine.prototype.integrator=function(particle,duration){
 		//F(힘)=m(질량)*a(가속도)
 			//a(가속도)=f/m
@@ -169,22 +175,26 @@
 		this.$updateParticle=true;
 	}
 	Engine.prototype.particle=function(key,info){
-		if(!this.$canvas.$element[key]){
-			console.warn("Gear World : 엘레먼트의 이름을 올바르게 입력해주세요");
-			return;
-		}
 		var newParticle=this.$particle[key] ? false : true;
+		if(!info){
+			newParticle=false;
+		}
 		var basicParticle=Engine.prototype.basicParticle;
 		/*particleStack은 명령어를 수행할 입자를 저장하는 역할을 한다*/
 		/*각 명령은 대부분 particleStack.pop() 을통해 대상이되는 입자를 pop한다.*/
 		this.$updateParticle=true;
 		switch(newParticle){
-			case true: //for문을 통하여 자동화 하여되지만, 편한관리와 버그방지를 위하여 나열식으로 작성한다.
+			case true:
+				if(typeof info.style!="string" || !this.$canvas.$element[info.style]){
+					console.warn("올바른 입자의 스타일을 지정해주세요 (style속성에 cvss엘레먼트의 이름을 등록해주세요)")
+					return;
+				}
+				//for문을 통하여 자동화 하여되지만, 편한관리와 버그방지를 위하여 나열식으로 작성한다.
 				//나눗셈이 곱셈보다 몇십배 느리기 때문에 역질량을 설정해 곱셈을 사용한다
 				info.m=isNaN(Number(info.m)) ? basicParticle.m : Number(info.m);
 				info.inverseMass=1/info.m; //역 질량 a=f/inverseMass
 				
-				var cvss_Element=this.$canvas.$element[key];
+				var cvss_Element=this.$canvas.$element[info.style];
 				info.f=Vector.isVector(info.f) || [basicParticle.f[0],basicParticle.f[1]];
 				info.v=Vector.isVector(info.v) || [basicParticle.v[0],basicParticle.v[1]];
 				info.a=Vector.isVector(info.a) || [basicParticle.a[0],basicParticle.a[1]];
@@ -216,7 +226,7 @@
 				this.$particle[key]=info;
 				this.$particleKey.push(key);
 
-				this.eventFunc[key]={}
+				this.$particle[key].eventFunction={}
 				return 1;
 			case false:
 				this.$particleStack.push(key);
@@ -229,7 +239,7 @@
 	Engine.prototype.applyParticleProperty=function(){
 		var obj=this.$systemValue.standbyParticleProperty,
 			key=Object.keys(obj);
-		for(var i=0; i<key.length; i++){
+			for(var i=0; i<key.length; i++){
 			var subKey=typeof obj[key[i]]=="object" ? Object.keys(obj[key[i]]) :NaN;
 			if(!subKey){continue;}
 
@@ -246,7 +256,7 @@
 		}
 	}
 	//원래 정석적인 물리엔진은 속도를 변경하기위해서는 가속도를 변경시키지만,
-	//이 엔진은 2d 가벼운 엔진이기때문에 속도를 직접적으로 변경할 수 있게 제작할 것이다.
+	//이 엔진은 canvas에서 실행되는 가벼운 2d엔진이기때문에 속도를 직접적으로 변경할 수 있게 제작할 것이다.
 	//위치 또한 포탈이나 기타 부수적인 기능 때문에 필요하다. 다만, engine.js에서 지원하는 위치벡터를 권장할 예정
 	Engine.prototype.property=function(propertyName,propertyValue){
 		if(this.$particleStack.length<1){
@@ -272,6 +282,12 @@
 						var result=Vector.isVector(propertyName[key[i]]);
 						type="vector";	
 						break;
+					case "boolean":
+						result=propertyValue;
+						type="B"
+						break;
+					case "string":
+						var result=String(propertyName[key[i]])
 				}
 				if((isNaN(result) && type=="number") || (!result && type=="vector") || (type=="B" && (result!==false || result!==true))){
 					continue;
@@ -295,6 +311,9 @@
 				case "boolean":
 					result=propertyValue;
 					type="B"
+					break;
+				case "string":
+					var result=String(propertyValue)			
 			}
 			if((isNaN(result) && type=="N") || (!result && type=="V") || (type=="B" && (result!==false || result!==true))){
 				//propertyName만 주어졌을 경우에는(혹은 value가 올바르지않을경우) particle.propertyName 의 값만을 출력해주는 역할을한다.
@@ -308,7 +327,7 @@
 	}
 	Engine.prototype.collision=function(func){
 		var particleName=this.$particleStack.pop();
-		var	lotation=this.eventFunc[particleName];
+		var	lotation=this.$particle[particleName].event;
 		lotation.collision=func;
 	}
 	
@@ -449,11 +468,11 @@
 		var B=this.$particle[particle[1]];
 
 
-		if(typeof this.eventFunc[particle[0]].collision=="function"){
-			this.eventFunc[particle[0]].collision.apply(this,[particle[1]])
+		if(typeof this.$particle[particle[0]].eventFunction.collision=="function"){
+			this.$particle[particle[0]].eventFunction.collision.apply(this,[particle[1]])
 		}
-		if(typeof this.eventFunc[particle[1]].collision=="function"){
-			this.eventFunc[particle[1]].collision.apply(this,[particle[0]])
+		if(typeof this.$particle[particle[1]].eventFunction.collision=="function"){
+			this.$particle[particle[1]].eventFunction.collision.apply(this,[particle[0]])
 		}
 
 		if(A.contactHandling===false || B.contactHandling===false){
