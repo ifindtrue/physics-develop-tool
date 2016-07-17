@@ -8,6 +8,7 @@
 		<link href="./css/bootstrap.css" rel="stylesheet">
 		<script src="./js/cvss.0.2.js"></script>
 		<script src="./js/engine.js"></script>
+		<script src="./js/jquery-3.1.0.min.js"></script>
 	</head>
 	<body>
 		<section class="container">
@@ -62,8 +63,8 @@
 					</section>	
 					<button id="addParticle" class="btn radius-none btn-warning btn-block btn-sm">새로운 입자추가</button>
 					<div class="kindBtnWrap">
-						<div class="btn radius-none btn-danger btn-block btn-sm kindproperty" id="kindBtn_degine" style="border-right-width:0">디자인 속성</div>
-						<div class="btn radius-none btn-block btn-sm kindproperty" id="kindBtn_physics">물리 속성</div>
+						<div class="btn radius-none btn-danger btn-block btn-sm kindproperty" data-class="degine" data-toggle="active" style="border-right-width:0">디자인 속성</div>
+						<div class="btn radius-none btn-block btn-sm kindproperty" data-class="physics">물리 속성</div>
 					</div>
 					<!--
 						0:block
@@ -197,7 +198,7 @@
 								</li>
 								<li class="title">정점<div id="vertexPlus">추가</div></li>
 								<li style="padding:0">
-									<select vertex-index="0" selected-vertex-index="0" id="vertexInfo" style="width:100%; height:25px; margin-bottom:5px; background:#eee; border:0">
+									<select vertex-index="2" selected-vertex-index="0" id="vertexInfo" style="width:100%; height:25px; margin-bottom:5px; background:#eee; border:0">
 										<option value="0">정점 1</option>
 									</select>
 								</li>
@@ -448,7 +449,8 @@
 		<script type="text/javascript">
 			var stateTarget=new Object(),//현재 선택된 입자의 정보
 				ENGINE,particleInfo={}; //run 전에 enigne에 등록될 입자들의 정보를 보관합니다.
-			window.onload=function(){
+
+			$(document).ready(function(){
 				window.onresize=function(){
 					liveView.$canvas.width=document.documentElement.clientWidth-500;
 					liveView.$canvas.height=document.documentElement.clientHeight;
@@ -524,8 +526,10 @@
 					});
 					var prevPosition={x:0,y:0};
 					this.element("WINDOW").dragstart(function(e){
-						var position=th.element(stateTarget.name).cvss("translate");
-						prevPosition={x:e.x-position[0],y:e.y-position[1]};
+						if(typeof position=="object" && stateTarget.name){
+							var position=th.element(stateTarget.name).cvss("translate");
+							prevPosition={x:e.x-position[0],y:e.y-position[1]};
+						}
 					})
 					this.element("WINDOW").drag(function(e){
 						if(!stateTarget.name){
@@ -541,80 +545,79 @@
 						th.element(stateTarget.name).cvss("translate",[nX,nY]);
 					});
 				});
+				var run=$("#run"); //엔진실행버튼
+				var vertexPlus=$("#vertexPlus");
+				var addParticleBtn=$("#addParticle");
+				var physicsInfo=$("#physicsInfo");
+				var vertexInfo=$("#vertexInfo");
+					var vertexInfo_js=document.getElementById("vertexInfo")
+				var backgroundMass=$("#backgroundMass");
+				
+				var inputs=$(".propertyInput"); //디자인속성 입력폼
+				var physicsProperty=$(".propertyInput_physics"); // 물리속성 입력폼
+				var kindproperty=$(".kindproperty");
+				var sectionChange=$(".sectionChange");
 
-				var run=document.getElementById("run"); //엔진실행버튼
-				var inputs=document.getElementsByClassName("propertyInput"); //디자인속성 입력폼
-				var physicsProperty=document.getElementsByClassName("propertyInput_physics"); // 물리속성 입력폼
-				var kindproperty=document.getElementsByClassName("kindproperty");
-				var vertexPlus=document.getElementById("vertexPlus");
-				var addParticleBtn=document.getElementById("addParticle");
-				var sectionChange=document.getElementsByClassName("sectionChange");
-				var physicsInfo=document.getElementById("physicsInfo");
-				var vertexInfo=document.getElementById("vertexInfo");
-				var backgroundMass=document.getElementById("backgroundMass");
-
+				var physicsPropertyList=$('.physicsPropertyList');
+				var physicsPropertyInput=$(".propertyInput_physics");
+				
 				//디자인속성값을 입력하는 input들을 모두 불러옵니다.
 				//불러온 input들의 속성에 click시에 updateProperty에 input.value를 전달하라는 함수를 일괄적으로 적용합니다.
-				for(var i=0; i<inputs.length; i++){
-					inputs[i].onchange=function(){
-						updateProperty(this.getAttribute("data-type"),this)
-					};
-				}
+				inputs.change(function(){
+					updateProperty($(this).attr("data-type"),this);
+				});
+
 				//물리속성값을 입력하는 input들을 모두 불러옵니다.
 				//마찬가지로 input이 onchange했을 때, 알맞은 속성에 input.value를 적용합니다.
-				for(i=0; i<physicsProperty.length; i++){
-					physicsProperty[i].onchange=function(){
-						particleInfo[stateTarget.name][this.getAttribute("data-type")]=this.value;
-					}
-				}
+				physicsProperty.change(function(){
+					particleInfo[stateTarget.name][this.getAttribute("data-type")]=this.value;
+				});
+
 				//물리속성과 디자인속성의 toggle을 관리하는 함수입니다.
-				for(i=0; i<kindproperty.length; i++){
-					kindproperty[i].onclick=function(){
-						var active=this.getAttribute("data-toggle");
-						if(active=="active"){
-							return;
-						}else{
-							this.classList.add("btn-danger");
-							this.setAttribute("data-toggle","active");
-							var on=this.getAttribute("id")=="kindBtn_degine" ? "physics" : "degine";
-							var o=document.getElementById("kindBtn_"+on);
-							o.classList.remove("btn-danger");
-							o.removeAttribute("data-toggle");
+				kindproperty.click(function(){
+					var th=$(this)
+					var active=th.attr("data-toggle");
+					if(active=="active"){
+						return;
+					}else{
+						th.addClass("btn-danger");
 
-							var t=(on=="physics") ? "degine" : "physics"
-							var showProperty=document.getElementById("propertyArea_"+t);
-							var hideProperty=document.getElementById("propertyArea_"+on);
-							hideProperty.style.display="none"
-							showProperty.style.display="block"
-						}
-					}
-				}
-
-				for(i=0; i<sectionChange.length;i++){
-					sectionChange[i].onclick=function(){
-						var clickSection=this.getAttribute("data-type");
-						var mainSection=document.getElementById("mainSection");
-						var nowSection=mainSection.getAttribute("now-section")
-						if(clickSection==nowSection){return}
+						var o=$(".kindproperty[data-toggle=active]");
+						o.removeClass("btn-danger");
+						o.removeAttr("data-toggle");
 						
-						for(var j=0; j<sectionChange.length; j++){
-							if(sectionChange[j].getAttribute("data-type")==nowSection){
-								sectionChange[j].classList.remove("on")
-								break;
-							}
-						}
-						this.classList.add("on");
+						th.attr("data-toggle","active");
 
-						document.getElementById(clickSection).style.display="block";
-						document.getElementById(nowSection).style.display="none";
-						mainSection.setAttribute("now-section",clickSection);
-
+						var showProperty=$("#propertyArea_"+th.attr("data-class"));
+						var hideProperty=$("#propertyArea_"+o.attr("data-class"));
+						hideProperty.css("display","none");
+						showProperty.css("display","block")
 					}
-				}
+				});
+
+				sectionChange.click(function(){
+					var th=$(this);
+					var clickSection=th.attr("data-type");
+					var nowSection=$("#mainSection").attr("now-section")
+					if(clickSection==nowSection){
+						return
+					}
+					sectionChange.removeClass("on");
+					th.addClass("on");
+
+					$("#"+clickSection).css("display","block");
+					$("#"+nowSection).css("display","none");
+
+					if(clickSection=="scriptArea"){
+						$("#cvss-editor").focus();
+					}
+					mainSection.setAttribute("now-section",clickSection);
+				});
+
 				//updateProperty는 속성을 cvssElement에 적용
 				function updateProperty(type,element){
 					if(type=="vertex"){
-						var index=vertexInfo.getAttribute("selected-vertex-index");
+						var index=Number(vertexInfo.attr("selected-vertex-index"));
 						var vertex=liveView.element(stateTarget.name).cvss("vertex");
 						if(!vertex){
 							vertex=[]
@@ -623,12 +626,19 @@
 							vertex[index]=[];
 						}
 						vertex[index][element.getAttribute("lotation")]=element.value;
+
 						liveView.element(stateTarget.name).cvss("vertex",vertex);
 						updateParticleState(stateTarget.name)
 						return ;
 					}else if(type=="name"){
 						if(liveView.element(stateTarget.name).rename(element.value)){
+							ENGINE.particle(stateTarget.name).rename(element.value);
+							ENGINE.particle(element.value).property("style",element.value);
+							
 							stateView.element(stateTarget.name).rename(element.value);
+
+							particleInfo[element.value]=particleInfo[stateTarget.name];
+
 							stateTarget.name=element.value;
 							//엔진 particle 이름
 							updateParticleState(stateTarget.name);
@@ -641,6 +651,7 @@
 						updateLiveCanvas(stateTarget.name,obj);
 					}
 				}
+
 				function updateLiveCanvas(name,info){
 					//이함수는 메인캔버스에 전달받은 변수들로 요소를 업데이트하거나 추가합니다.
 					if(!name){
@@ -659,9 +670,11 @@
 					if(liveView.$systemValue.EVENT[name].center){ //무게중심을 계산할 수있 입자만을 중앙에 위치한다
 						info.x=stateView.$canvas.width/2-(liveView.$systemValue.EVENT[name].center[0]-liveView.element(name).cvss("$x"));
 						info.y=stateView.$canvas.height/2-(liveView.$systemValue.EVENT[name].center[1]-liveView.element(name).cvss("$y"));
+						console.log(liveView.$systemValue.EVENT[name].center)
 					}else{
 						info.x=0;
 						info.y=0;
+						console.log("A")
 					}
 					if(stateTarget.name){
 						stateView.element(stateTarget.name).remove();
@@ -687,13 +700,17 @@
 
 					var Key=Object.keys(stateTarget.property);
 					
-					vertexInfo.length=0;
-					var length=(stateTarget.property.vertex && stateTarget.property.vertex.length) || 0;
-					for(i=0; i<length; i++){
-						vertexInfo.options.add(new Option("정점 "+Number(i+1),String(i)));
+					if(stateTarget.property.type=="polygon"){
+						var selectedIndex=vertexInfo.attr("selected-vertex-index");
+						vertexInfo_js.length=0;
+						var length=liveView.element(stateTarget.name).cvss("vertex").length || 1;
+						for(i=0; i<length; i++){
+							vertexInfo_js.options.add(new Option("정점 "+Number(i+1),String(i)));
+						}
+						vertexInfo_js.options[selectedIndex].selected=true;
+						vertexInfo.attr("vertex-index",length);					
 					}
-					vertexInfo.setAttribute("selected-vertex-index",length-1);
-					vertexInfo.options[length-1].selected=true;
+
 
 
 					for(var i=0; i<physicsProperty.length; i++){
@@ -719,9 +736,10 @@
 						}
 						if(type=="vertex"){
 							var lotation=item.getAttribute("lotation");
-							var seletedIndex=vertexInfo.getAttribute("selected-vertex-index");
-							if(vertex && vertex[seletedIndex] && vertex[seletedIndex][item.getAttribute("lotation")]){
-								item.value=vertex[seletedIndex][item.getAttribute("lotation")];
+							if(vertex && vertex[selectedIndex] && !isNaN(vertex[selectedIndex][item.getAttribute("lotation")])){
+								item.value=vertex[selectedIndex][item.getAttribute("lotation")];
+							}else{
+								item.value=""
 							}
 							continue;
 						}
@@ -739,11 +757,8 @@
 							}
 						}
 					}
-					var physicsPropertyList=document.getElementsByClassName('physicsPropertyList');
-					for(var i=0; i<physicsPropertyList.length; i++){
-						physicsPropertyList[i].style.display="block";
-					}
-					var physicsPropertyInput=document.getElementsByClassName("propertyInput_physics");
+					physicsPropertyList.css("display","block");
+
 					for(i=0; i<physicsPropertyInput.length; i++){
 						var element=physicsPropertyInput[i];
 						var property=element.getAttribute("data-type");
@@ -757,23 +772,28 @@
 				}
 
 				//입자를 추가하는 버튼을 클릭하면 새로운 입자를 cvssCanvas 자세히말하자면 liveView 캔버스에 추가합니다
-				vertexPlus.onclick=function(){
-					var index=Number(vertexInfo.getAttribute("vertex-index"));
-					
+				vertexPlus.click(function(){
+					var index=Number(vertexInfo.attr("vertex-index"));
+
 					obj=liveView.element(stateTarget.name).cvss("vertex");
-					if(obj && obj[index] && (!isNaN(obj[index][0]) && !isNaN(obj[index][1]))){
+					if(obj && obj[index-1] && (!isNaN(obj[index-1][0]) && !isNaN(obj[index-1][1]))){
 						index++;
-						vertexInfo.options.add(new Option("정점 "+(index+1),index));
-						vertexInfo.options[index].selected=true;
-						vertexInfo.setAttribute("vertex-index",index);
-						vertexInfo.setAttribute("selected-vertex-index",index);		
-						document.getElementById("Vx").value="";
-						document.getElementById("Vy").value="";
+						vertexInfo_js.options.add(new Option("정점 "+(index),index-1));
+						vertexInfo_js.options[index-1].selected=true;
+
+						vertexInfo.attr("vertex-index",index);
+						vertexInfo.attr("selected-vertex-index",index-1);		
+						$("#Vx").val("");
+						$("#Vy").val("");
+					}else{
+						vertexInfo_js.options[index-1].selected=true;
+						$("#Vx").val(obj[index-1] && obj[index-1][0]);
+						$("#Vy").val(obj[index-1] && obj[index-1][1]);
 					}
-				}
+				});
 
 
-				addParticleBtn.onclick=function(){
+				addParticleBtn.click(function(){
 					//init엘레먼트
 					var name="particle"+(liveView.$elementKey.length);
 					updateLiveCanvas(name,{
@@ -783,11 +803,11 @@
 						y:Math.floor(Math.random()*liveView.$canvas.height),
 						baseEventElement:"EVENT",
 						rotate:0,
-						vertex:[[50,0],[50,100]]
+						vertex:[[50,0],[50,100]],
 					});
 					particleInfo[name]=new Object();
-
-				}
+					particleInfo[name].style=name;
+				});
 				/*바운딩박스 체크함수
 				setInterval(function(){
 					if(!stateTarget.name){
@@ -806,7 +826,7 @@
 					});
 				},1000);
 				*/
-				run.onclick=function(){
+				run.click(function(){
 					if(this.getAttribute("data-toggle")=="run"){
 						ENGINE=new Engine(liveView,{
 							fps:60,
@@ -820,69 +840,62 @@
 						this.classList.remove("btn-warning");	
 						this.classList.add("btn-danger");
 						this.setAttribute("data-toggle","stop");
-						addParticle.setAttribute("disabled",true);
-						for(i=0; i<inputs.length; i++){
-							inputs[i].setAttribute("disabled",true);
-						}
-						for(i=0; i<physicsProperty.length; i++){
-							physicsProperty[i].setAttribute("disabled",true);
-						}
-						backgroundMass.setAttribute("disabled",true)
 
-						physicsInfo.style.display="block"
-						physicsInfo.style.opacity=1;
+						addParticleBtn.attr("disabled",true);
+						inputs.attr("disabled",true);
+						physicsProperty.attr("disabled",true);
+						backgroundMass.attr("disabled",true)
 
+						physicsInfo.css({"display":"block","opacity":"1"});
 					}else{
 						ENGINE.stop();
 						this.innerHTML="RUN";
 						this.setAttribute("data-toggle","run")						
 						this.classList.add("btn-warning");	
 						this.classList.remove("btn-danger");
-						addParticle.removeAttribute("disabled")
-						for(i=0; i<inputs.length; i++){
-							inputs[i].removeAttribute("disabled");
-						}
-						backgroundMass.removeAttribute("disabled")
-						for(i=0; i<physicsProperty.length; i++){
-							if(physicsProperty[i].getAttribute("data-type")=="m" && backgroundMass.checked==true){
-								continue
-							}							
-							physicsProperty[i].removeAttribute("disabled");
-						}		
-						physicsInfo.style.display="none";
+
+						addParticleBtn.removeAttr("disabled")
+						inputs.removeAttr("disabled");
+
+						physicsProperty.removeAttr("disabled");
+						backgroundMass.removeAttr("disabled")
+
+						if(backgroundMass.checked==true){
+							$(".physicsProperty[data-type=m]").attr("disabled",true)
+						}							
+						physicsInfo.css({"display":"none","opacity":"0"});
 					}
-				}
-				document.getElementById("vertexInfo").onchange=function(){
-					var vertexInfo=document.getElementById("vertexInfo");
+				});
+
+				vertexInfo.change(function(){
 					this.setAttribute("selected-vertex-index",Number(this.value));
 					var vertex=liveView.element(stateTarget.name).cvss("vertex");
-					if(vertex[this.value]){
-						document.getElementById('Vx').value=vertex[this.value][0];
-						document.getElementById('Vy').value=vertex[this.value][1];
-					}
-				}
+					document.getElementById('Vx').value=(vertex[this.value] && String(Number(vertex[this.value][0]))) || "";
+					document.getElementById('Vy').value=(vertex[this.value] && String(Number(vertex[this.value][1]))) || "";
+				});
 
 				var	active_operationMode_checkbox=document.getElementById("active_operationMode_checkbox");
 				var active_operationMode_Timer;
 
-				var alertBox=document.getElementById("active_operationMode_alertBox");
+				var alertBox=$("#active_operationMode_alertBox");
 
 				active_operationMode_checkbox.onclick=function(){
 					clearTimeout(active_operationMode_Timer);
 					if(this.checked){
-						alertBox.style.display="block";
-						alertBox.style.opacity=1;
+						alertBox.css('display',"block")
+						alertBox.animate({opacity:1},200);
 						active_operationMode_Timer=setTimeout(function(){
-							alertBox.style.opacity=0;
+							alertBox.animate({opacity:0},200,function(){
+								$(this).css("display","none");
+							})
 						},3000);
 					}else{
-						alertBox.style.opacity=0;
+						alertBox.animate({opacity:0},200,function(){
+							$(this).css("display","none");
+						})
 					}
 				}
-				alertBox.onclick=function(){
-					alertBox.style.display="none";
-				}
-				backgroundMass.onclick=function(){
+				backgroundMass.click(function(){
 					for(var i=0; i<physicsProperty.length; i++){
 						if(physicsProperty[i].getAttribute("data-type")=="m"){
 							var input_target=physicsProperty[i];
@@ -902,9 +915,9 @@
 							break;
 						}
 					}
-				}
-			}
-
+				});
+			});
+			
 
 		</script>
 	</body>
